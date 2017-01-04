@@ -225,12 +225,13 @@ doRemoveUser(event){
         var index = self.users.indexOf(self.selectedUser)
         self.users.splice(index,1)
         self.selectedUser = null
-        self.update()
 
         sweetAlert({
             title  : "Information",
             text   : "User delete complete.",
             type   : "success"
+        }, function(){
+            self.update()
         })
     })
 }
