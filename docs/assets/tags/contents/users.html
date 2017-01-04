@@ -63,7 +63,6 @@
             <!-- table -->
             <div class="row">
                 <div class="col-md-12">
-                    <div class="table-responsive">
                         <table class="table">
                             <!-- table header -->
                             <thead class="text-primary">
@@ -94,7 +93,6 @@
                             </tr>
                             </tbody>
                         </table>
-                    </div>
                 </div>
 
             </div>
@@ -186,13 +184,22 @@ doEditUser(event){
     self.showRegistWindow()
 }
 
-doRegistUser(event){
+doRegistUser(event)
+{
+    var newValue = {
+        accountName: self.accountNameInput.value,
+        displayName: self.displayNameInput.value,
+        email: self.emailInput.value
+    }
 
-    self.users.push({
-        accountName : self.accountNameInput.value,
-        displayName : self.displayNameInput.value,
-        email       : self.emailInput.value
-    })
+    if (self.selectedUser) {
+        var index = self.users.indexOf(self.selectedUser)
+        self.users.splice(index,1,newValue)
+        self.selectedUser = null
+    }
+    else{
+        self.users.push(newValue)
+    }
 
     sweetAlert({
         title  : "Information",
@@ -213,21 +220,19 @@ doRemoveUser(event){
          text   : "Do you want delete user?",
          type   : "warning",
          showCancelButton: true,
-         closeOnConfirm: true,
-         showLoaderOnConfirm: true
-         }, function(){
-            var index = self.users.indexOf(self.selectedUser)
-            self.users.splice(index,1)
-            self.selectedUser = null
+         closeOnConfirm: false
+    }, function(){
+        var index = self.users.indexOf(self.selectedUser)
+        self.users.splice(index,1)
+        self.selectedUser = null
+        self.update()
 
         sweetAlert({
             title  : "Information",
             text   : "User delete complete.",
             type   : "success"
-        },function(){
-            self.update()
         })
-         })
+    })
 }
 
 showRegistWindow(){
