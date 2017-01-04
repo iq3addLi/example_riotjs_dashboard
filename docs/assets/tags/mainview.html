@@ -1,0 +1,52 @@
+<mainview>
+
+<!-- UI -->
+<div class="wrapper">
+        <content />
+</div>
+
+
+<!-- Logic -->
+<script>
+    
+var self = this
+
+self.menus = [
+              { title : "Users", identifier : "users" }
+              ]
+
+
+self.on("mount", function() {
+        
+    riot.route.start()
+
+    function routing(num){
+        var title       = self.menus[num].title
+        var identifier  = self.menus[num].identifier
+        console.log("title=" + title + ",identifier=" + identifier)
+        riot.route( "/" + identifier, function() {
+            riot.mount("content", identifier, { title : title, identifier : identifier } )
+        })
+    }
+        
+    for ( i=0; i<self.menus.length; i++ ){
+        routing(i)
+    }
+    
+    // 404
+    riot.route( function() {
+        riot.mount("content", self.menus[0].identifier,{ title : self.menus[0].title })
+    })
+    
+    if( location.hash ) {
+        riot.mount("content", location.hash.substr(1))
+    }else{
+        riot.mount("content", self.menus[0].identifier,{ title : self.menus[0].title } )
+    }
+
+    riot.route(location.hash.replace("#", ""))
+})
+        
+</script>
+
+</mainview>

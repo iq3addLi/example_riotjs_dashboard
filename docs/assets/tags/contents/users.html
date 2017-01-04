@@ -1,0 +1,242 @@
+<users>
+
+<!-- UI -->
+<div name="mainPanel" class="main-panel">
+    <!-- navbar -->
+    <div class="navbar navbar-default navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <a href="/" class="navbar-brand">Example Dashboard</a>
+                <button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#navbar-main">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+            </div>
+            <div class="navbar-collapse collapse" id="navbar-main">
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="/">Top</a></li>
+                    <!--
+                    <li class="dropdown active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Demo <span class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                            <li><a href="./bootstrap-ja.html">Japanese Page</a></li>
+                            <li><a href="./bootstrap.html">English Page</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="//github.com/windyakin/Honoka/releases">Download</a></li>
+                    <li><a href="//github.com/windyakin/Honoka/wiki">Wiki</a></li>
+                    -->
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            <i class="material-icons">person</i>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a onclick={ doLogout }>Logout</a></li>
+                        </ul>
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- content -->
+    <div class="content">
+        <div class="container" style="min-height: 100vh;">
+
+            <!-- title -->
+            <div class="row">
+                <div class="col-md-12">
+                    <br/><br/><br/>
+                    <h1>Users</h1>
+                </div>
+            </div>
+
+            <!-- control -->
+            <div class="row">
+                <div class="col-md-12">
+                    <button class="btn btn-info" onclick="{ doRegistButton }" style="width: 100px;">regist</button>
+                </div>
+            </div>
+
+            <!-- table -->
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <!-- table header -->
+                            <thead class="text-primary">
+                            <th>account name</th>
+                            <th>display name</th>
+                            <th>email</th>
+                            <th>action</th>
+                            </thead>
+
+                            <!-- table body -->
+                            <tbody if={ users.length }>
+                            <tr each={ users }>
+                                <td>{ accountName }</td>
+                                <td>{ displayName }</td>
+                                <td>{ email }</td>
+                                <td>
+                                    <div class="dropdown">
+                                        <a href="#" class="btn btn-info dropdown-toggle" data-toggle="dropdown">
+                                            Action
+                                            <b class="caret"></b>
+                                        </a>
+                                        <ul class="dropdown-menu">
+                                            <li><a onclick={ doEditUser }>edit</a></li>
+                                            <li><a onclick={ doRemoveUser }>delete</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    
+    
+    <!--  remodal create form -->
+    <div class="remodal" data-remodal-id="deviceView">
+        <button data-remodal-action="close" class="remodal-close"></button>
+        <div class="card">
+            <div class="card-header" data-background-color="purple">
+                <h4 class="title">Register</h4>
+            </div>
+            <div class="card-content">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div name="form" class="form-group label-floating">
+                            <label class="control-label">Account name</label>
+                            <input name="accountNameInput" type="text" value="" class="form-control"/>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div name="form" class="form-group label-floating">
+                            <label class="control-label">Display name</label>
+                            <input name="displayNameInput" type="text" value="" class="form-control"/>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div name="form" class="form-group label-floating">
+                            <label class="control-label">Email</label>
+                            <input name="emailInput" type="text" value="" class="form-control"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <button class="btn btn-info" onclick="{ doRegistUser }">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+
+<!-- Logic -->
+<script>
+
+// initalize
+var self = this
+self.users = []
+
+self.on('mount', function() {
+    global.post("changeActiveID", self.opts.identifier )
+})
+
+
+// riot action
+doRegistButton(){
+    self.accountNameInput.value = ""
+    self.displayNameInput.value = ""
+    self.emailInput.value = ""
+
+    self.showRegistWindow()
+}
+
+
+
+doLogout(){
+    $("div.wrapper").fadeOut("default", function(){
+        localStorage.removeItem("session")
+        global.reload()
+                             
+        global.notify( "info", "Logout completed." )
+    })
+}
+
+doEditUser(event){
+    self.selectedUser = event.item
+
+    self.accountNameInput.value = event.item.accountName
+    self.displayNameInput.value = event.item.displayName
+    self.emailInput.value = event.item.email
+
+    self.showRegistWindow()
+}
+
+doRegistUser(event){
+
+    self.users.push({
+        accountName : self.accountNameInput.value,
+        displayName : self.displayNameInput.value,
+        email       : self.emailInput.value
+    })
+
+    sweetAlert({
+        title  : "Information",
+        text   : "User regist complete.",
+        type   : "success"
+    },function(){
+        self.deviceView.close()
+        self.update()
+    })
+}
+
+doRemoveUser(event){
+
+    self.selectedUser = event.item
+
+    sweetAlert({
+         title  : "Information",
+         text   : "Do you want delete user?",
+         type   : "warning",
+         showCancelButton: true,
+         closeOnConfirm: true,
+         showLoaderOnConfirm: true
+         }, function(){
+            var index = self.users.indexOf(self.selectedUser)
+            self.users.splice(index,1)
+            self.selectedUser = null
+
+        sweetAlert({
+            title  : "Information",
+            text   : "User delete complete.",
+            type   : "success"
+        },function(){
+            self.update()
+        })
+         })
+}
+
+showRegistWindow(){
+    self.deviceView = $('[data-remodal-id=deviceView]').remodal()
+    self.deviceView.settings.hashTracking = false
+    self.deviceView.open()
+}
+
+</script>
+
+
+</users>

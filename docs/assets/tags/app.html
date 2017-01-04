@@ -1,0 +1,22 @@
+<app>
+    
+<!-- UI -->
+<main />
+
+
+<!-- Logic -->
+<script>
+    
+    var self = this
+
+    self.on("mount", function() {
+        if( global.isLogin() ){
+            riot.mount("main", "mainview")
+        }else{
+            riot.mount("main", "loginview")
+        }
+    })
+    
+</script>
+    
+</app>
