@@ -1,0 +1,19 @@
+{
+    "users" : [
+        {
+            "accountName"   : "User1",
+            "displayName"   : "User",
+            "email"         : "email@sample"
+        },
+        {
+            "accountName"   : "User2",
+            "displayName"   : "User",
+            "email"         : "email@sample"
+        },
+        {
+            "accountName"   : "User3",
+            "displayName"   : "User",
+            "email"         : "email@sample"
+        }
+    ]
+}

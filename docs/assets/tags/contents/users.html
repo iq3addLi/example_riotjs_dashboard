@@ -2,6 +2,7 @@
 
 <!-- UI -->
 <div name="mainPanel" class="main-panel">
+
     <!-- navbar -->
     <div class="navbar navbar-default navbar-fixed-top">
         <div class="container">
@@ -53,48 +54,74 @@
                 </div>
             </div>
 
-            <!-- control -->
+            <!-- table header -->
             <div class="row">
-                <div class="col-md-12">
-                    <button class="btn btn-info" onclick="{ doRegistButton }" style="width: 100px;">regist</button>
+                <div class="col-md-6">
+                    <div class="btn-group btn-gr">
+						<button type="button" class="btn btn-nc" onclick="{ doRegistButton }">新規</button>
+						<button type="button" class="btn btn-nc" >編集</button>
+						<button type="button" class="btn btn-nc" >削除</button>
+					</div>
+                </div>
+                <div class="col-md-6">
+                    <div style="text-align: right">
+                        <label>Search:<input type="search" class="form-control input-sm" placeholder="" aria-controls="tb_dtable"></label>
+                    </div>
                 </div>
             </div>
 
             <!-- table -->
             <div class="row">
                 <div class="col-md-12">
-                        <table class="table">
-                            <!-- table header -->
-                            <thead class="text-primary">
-                            <th>account name</th>
-                            <th>display name</th>
-                            <th>email</th>
-                            <th>action</th>
-                            </thead>
+                    <table class="table">
+                        
+                        <!-- header row -->
+                        <thead class="text-primary">
+                        <th>account name</th>
+                        <th>display name</th>
+                        <th>email</th>
+                        <th>action</th>
+                        </thead>
 
-                            <!-- table body -->
-                            <tbody if={ users.length }>
-                            <tr each={ users }>
-                                <td>{ accountName }</td>
-                                <td>{ displayName }</td>
-                                <td>{ email }</td>
-                                <td>
-                                    <div class="dropdown">
-                                        <a href="#" class="btn btn-info dropdown-toggle" data-toggle="dropdown">
-                                            Action
-                                            <b class="caret"></b>
-                                        </a>
-                                        <ul class="dropdown-menu">
-                                            <li><a onclick={ doEditUser }>edit</a></li>
-                                            <li><a onclick={ doRemoveUser }>delete</a></li>
-                                        </ul>
-                                    </div>
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
+                        <!-- body row -->
+                        <tbody if={ users.length }>
+                        <tr each={ users }>
+                            <td>{ accountName }</td>
+                            <td>{ displayName }</td>
+                            <td>{ email }</td>
+                            <td>
+                                <div class="dropdown">
+                                    <a href="#" class="btn btn-info dropdown-toggle" data-toggle="dropdown">
+                                        Action
+                                        <b class="caret"></b>
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li><a onclick={ doEditUser }>edit</a></li>
+                                        <li><a onclick={ doRemoveUser }>delete</a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
                 </div>
+            </div>
 
+            <!-- table footer -->
+            <div class="row">
+                <div class="col-md-5">
+                    Showing 1 to 10 of 13 entries
+                </div>
+                <div class="col-md-7">
+                    <div style="text-align: right">
+                    <ul class="pagination">
+                        <li class="paginate_button previous disabled" id="tb_dtable_previous"><a href="#" aria-controls="tb_dtable" data-dt-idx="0" tabindex="0">Previous</a></li>
+                        <li class="paginate_button active"><a href="#" aria-controls="tb_dtable" data-dt-idx="1" tabindex="0">1</a></li>
+                        <li class="paginate_button "><a href="#" aria-controls="tb_dtable" data-dt-idx="2" tabindex="0">2</a></li>
+                        <li class="paginate_button next" id="tb_dtable_next"><a href="#" aria-controls="tb_dtable" data-dt-idx="3" tabindex="0">Next</a></li>
+                    </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -151,11 +178,24 @@ self.users = []
 
 self.on('mount', function() {
     global.post("changeActiveID", self.opts.identifier )
+
+    $.ajax({
+        url : "assets/json/userlist.json",
+        dataType : "json"
+    })
+    .done(function(json){
+        //console.log(json)
+        self.users = json.users
+        self.update()
+    })
+    .fail(function(error){
+        console.log(error)
+    })
 })
 
 
 // riot action
-doRegistButton(){
+self.doRegistButton = function(){
     self.accountNameInput.value = ""
     self.displayNameInput.value = ""
     self.emailInput.value = ""
@@ -163,9 +203,7 @@ doRegistButton(){
     self.showRegistWindow()
 }
 
-
-
-doLogout(){
+self.doLogout = function(){
     $("div.wrapper").fadeOut("default", function(){
         localStorage.removeItem("session")
         global.reload()
@@ -174,7 +212,7 @@ doLogout(){
     })
 }
 
-doEditUser(event){
+self.doEditUser = function(event){
     self.selectedUser = event.item
 
     self.accountNameInput.value = event.item.accountName
@@ -184,8 +222,7 @@ doEditUser(event){
     self.showRegistWindow()
 }
 
-doRegistUser(event)
-{
+self.doRegistUser = function(event){
     var newValue = {
         accountName: self.accountNameInput.value,
         displayName: self.displayNameInput.value,
@@ -211,7 +248,7 @@ doRegistUser(event)
     })
 }
 
-doRemoveUser(event){
+self.doRemoveUser = function(event){
 
     self.selectedUser = event.item
 
@@ -236,7 +273,7 @@ doRemoveUser(event){
     })
 }
 
-showRegistWindow(){
+self.showRegistWindow = function(){
     self.deviceView = $('[data-remodal-id=deviceView]').remodal()
     self.deviceView.settings.hashTracking = false
     self.deviceView.open()
