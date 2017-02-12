@@ -56,16 +56,12 @@
 
             <!-- table header -->
             <div class="row">
-                <div class="col-md-6">
-                    <div class="btn-group btn-gr">
-						<button type="button" class="btn btn-nc" onclick="{ doRegistButton }">新規</button>
-						<button type="button" class="btn btn-nc" >編集</button>
-						<button type="button" class="btn btn-nc" >削除</button>
-					</div>
+                <div class="col-md-9">
+					<button type="button" class="btn btn-nc" onclick="{ doRegistButton }">Create</button>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-3">
                     <div style="text-align: right">
-                        <label>Search:<input type="search" class="form-control input-sm" placeholder="" aria-controls="tb_dtable"></label>
+                        <input name="searchInput" oninput={ actionOfSearch } onchange={ actionOfSearch } type="search" class="form-control input-sm" placeholder="Search" aria-controls="tb_dtable">
                     </div>
                 </div>
             </div>
@@ -74,18 +70,20 @@
             <div class="row">
                 <div class="col-md-12">
                     <table class="table">
-                        
+
                         <!-- header row -->
                         <thead class="text-primary">
-                        <th>account name</th>
-                        <th>display name</th>
-                        <th>email</th>
-                        <th>action</th>
+                            <th>☑️</th>
+                            <th>account name</th>
+                            <th>display name</th>
+                            <th>email</th>
+                            <th>action</th>
                         </thead>
 
                         <!-- body row -->
-                        <tbody if={ users.length }>
-                        <tr each={ users }>
+                        <tbody if={ showUsers.length }>
+                        <tr each={ showUsers }>
+                            <td><input type="checkbox" /></td>
                             <td>{ accountName }</td>
                             <td>{ displayName }</td>
                             <td>{ email }</td>
@@ -110,15 +108,16 @@
             <!-- table footer -->
             <div class="row">
                 <div class="col-md-5">
-                    Showing 1 to 10 of 13 entries
+                    Showing <label>{ (page - 1) * length + 1 }</label> to <label>{ (page * length) > users.length ? users.length : (page * length) }</label> of <label>{ users.length }</label> entries
                 </div>
                 <div class="col-md-7">
                     <div style="text-align: right">
                     <ul class="pagination">
-                        <li class="paginate_button previous disabled" id="tb_dtable_previous"><a href="#" aria-controls="tb_dtable" data-dt-idx="0" tabindex="0">Previous</a></li>
-                        <li class="paginate_button active"><a href="#" aria-controls="tb_dtable" data-dt-idx="1" tabindex="0">1</a></li>
-                        <li class="paginate_button "><a href="#" aria-controls="tb_dtable" data-dt-idx="2" tabindex="0">2</a></li>
-                        <li class="paginate_button next" id="tb_dtable_next"><a href="#" aria-controls="tb_dtable" data-dt-idx="3" tabindex="0">Next</a></li>
+                        <li if={ page != 1 } class="paginate_button previous"><a onclick={ previousPage } >Previous</a></li>
+                        <li each={ pageElement in pageArray() } class="paginate_button">
+                            <a onclick={ selectPage }>{ pageElement }</a>
+                        </li>
+                        <li if={ users.length > page * length }><a onclick={ nextPage }>Next</a></li>
                     </ul>
                     </div>
                 </div>
@@ -128,7 +127,7 @@
     
     
     <!--  remodal create form -->
-    <div class="remodal" data-remodal-id="deviceView">
+    <div class="remodal" data-remodal-id="userView">
         <button data-remodal-action="close" class="remodal-close"></button>
         <div class="card">
             <div class="card-header" data-background-color="purple">
@@ -174,25 +173,66 @@
 
 // initalize
 var self = this
-self.users = []
+self.allUsers   = []
+self.users      = []
+self.showUsers  = []
+
+self.page   = 1
+self.length = 5
+self.search = null
+self.sort   = null
 
 self.on('mount', function() {
     global.post("changeActiveID", self.opts.identifier )
 
     $.ajax({
         url : "assets/json/userlist.json",
-        dataType : "json"
+        dataType : "json",
+        cache   : false
     })
     .done(function(json){
-        //console.log(json)
-        self.users = json.users
-        self.update()
+        self.setAllUsers(json.users)
     })
     .fail(function(error){
         console.log(error)
     })
 })
 
+self.setAllUsers = function(users){
+    self.allUsers = users
+    self.reloadDisplayUser()
+}
+
+self.reloadDisplayUser = function(){    
+    var work   = self.allUsers
+
+    var page   = self.page
+    var length = self.length
+    var search = self.search
+    var sort   = self.sort
+
+    // search
+    if( search != null ){
+        work = work.filter(function(user){
+            return Object.keys(user).filter(function(key){ 
+                return typeof user[key] == "string" ? user[key].indexOf( search ) != -1 : false
+            }).length
+        })
+    }
+    // sort
+    if( sort != null ){
+        work = work.sort(function(a,b){
+            return a[sortKey] > b[sortKey] ? 1 : -1
+        })
+    }
+    self.users = work
+    
+    // pick
+    work = work.slice( (page - 1) * length, page * length )
+
+    self.showUsers = work
+    self.update()
+}
 
 // riot action
 self.doRegistButton = function(){
@@ -230,12 +270,12 @@ self.doRegistUser = function(event){
     }
 
     if (self.selectedUser) {
-        var index = self.users.indexOf(self.selectedUser)
-        self.users.splice(index,1,newValue)
+        var index = self.allUsers.indexOf(self.selectedUser)
+        self.allUsers.splice(index,1,newValue)
         self.selectedUser = null
     }
     else{
-        self.users.push(newValue)
+        self.allUsers.push(newValue)
     }
 
     sweetAlert({
@@ -243,8 +283,8 @@ self.doRegistUser = function(event){
         text   : "User regist complete.",
         type   : "success"
     },function(){
-        self.deviceView.close()
-        self.update()
+        self.userView.close()
+        self.reloadDisplayUser()
     })
 }
 
@@ -259,8 +299,8 @@ self.doRemoveUser = function(event){
          showCancelButton: true,
          closeOnConfirm: false
     }, function(){
-        var index = self.users.indexOf(self.selectedUser)
-        self.users.splice(index,1)
+        var index = self.allUsers.indexOf(self.selectedUser)
+        self.allUsers.splice(index,1)
         self.selectedUser = null
 
         sweetAlert({
@@ -268,18 +308,43 @@ self.doRemoveUser = function(event){
             text   : "User delete complete.",
             type   : "success"
         }, function(){
-            self.update()
+            self.reloadDisplayUser()
         })
     })
 }
 
 self.showRegistWindow = function(){
-    self.deviceView = $('[data-remodal-id=deviceView]').remodal()
-    self.deviceView.settings.hashTracking = false
-    self.deviceView.open()
+    self.userView = $('[data-remodal-id=userView]').remodal()
+    self.userView.settings.hashTracking = false
+    self.userView.open()
+}
+
+self.selectPage = function(event){
+    self.page = event.item.pageElement
+    self.reloadDisplayUser()
+}
+
+self.previousPage = function(){
+    self.page -= 1 
+    self.reloadDisplayUser()
+}
+
+self.nextPage = function(){
+    self.page += 1
+    self.reloadDisplayUser() 
+}
+
+self.pageArray = function(){
+    var pageCount = Math.ceil( self.users.length / self.length )
+    return Array.from(new Array(pageCount)).map(function(v,i) { return i + 1 })
+}
+
+self.actionOfSearch = function(event){
+    self.page   = 1
+    self.search = self.searchInput.value
+    self.reloadDisplayUser() 
 }
 
 </script>
-
 
 </users>

@@ -23,7 +23,6 @@ self.on("mount", function() {
     function routing(num){
         var title       = self.menus[num].title
         var identifier  = self.menus[num].identifier
-        console.log("title=" + title + ",identifier=" + identifier)
         riot.route( "/" + identifier, function() {
             riot.mount("content", identifier, { title : title, identifier : identifier } )
         })
