@@ -73,20 +73,14 @@
 
                         <!-- header row -->
                         <thead class="text-primary">
-                            <th>☑️</th>
-                            <th>account name</th>
-                            <th>display name</th>
-                            <th>email</th>
-                            <th>action</th>
+                            <th each={ header in headers } onclick={ setSortKey } class={ active: header.key == sort.key }>{ header.title }</th>
+                            <th>Action</th>
                         </thead>
 
                         <!-- body row -->
                         <tbody if={ showUsers.length }>
-                        <tr each={ showUsers }>
-                            <td><input type="checkbox" /></td>
-                            <td>{ accountName }</td>
-                            <td>{ displayName }</td>
-                            <td>{ email }</td>
+                        <tr each={ user in showUsers }>
+                            <td each={ header in headers }>{ user[header.key] }</td>
                             <td>
                                 <div class="dropdown">
                                     <a href="#" class="btn btn-info dropdown-toggle" data-toggle="dropdown">
@@ -114,7 +108,7 @@
                     <div style="text-align: right">
                     <ul class="pagination">
                         <li if={ page != 1 } class="paginate_button previous"><a onclick={ previousPage } >Previous</a></li>
-                        <li each={ pageElement in pageArray() } class="paginate_button">
+                        <li each={ pageElement in pageArray() } class="paginate_button { active: page == pageElement }">
                             <a onclick={ selectPage }>{ pageElement }</a>
                         </li>
                         <li if={ users.length > page * length }><a onclick={ nextPage }>Next</a></li>
@@ -173,6 +167,12 @@
 
 // initalize
 var self = this
+
+self.headers    = [ 
+        {"key" : "accountName", title : "Account Name" },
+        {"key" : "displayName", title : "Display Name" },
+        {"key" : "email", title : "E-mail" }
+    ]
 self.allUsers   = []
 self.users      = []
 self.showUsers  = []
@@ -204,7 +204,7 @@ self.setAllUsers = function(users){
 }
 
 self.reloadDisplayUser = function(){    
-    var work   = self.allUsers
+    var work   = self.allUsers.concat()
 
     var page   = self.page
     var length = self.length
@@ -219,18 +219,21 @@ self.reloadDisplayUser = function(){
             }).length
         })
     }
+
     // sort
     if( sort != null ){
         work = work.sort(function(a,b){
-            return a[sortKey] > b[sortKey] ? 1 : -1
+            if ( sort.asc == true )
+                return a[sort.key] > b[sort.key] ? 1 : -1
+            else 
+                return a[sort.key] < b[sort.key] ? 1 : -1
         })
     }
     self.users = work
     
     // pick
-    work = work.slice( (page - 1) * length, page * length )
-
-    self.showUsers = work
+    var showUsers = work.slice( (page - 1) * length, page * length )
+    self.showUsers = showUsers
     self.update()
 }
 
@@ -343,6 +346,25 @@ self.actionOfSearch = function(event){
     self.page   = 1
     self.search = self.searchInput.value
     self.reloadDisplayUser() 
+}
+
+self.setSortKey = function(event){
+    var key = event.item.header.key
+
+    var sort = self.sort
+    if ( sort == null ){
+        sort = {}
+    }
+    
+    if ( sort.asc == false && sort.key == key ){
+        sort = null
+    }
+    else{
+        sort.asc = sort.key == key ? false : true
+        sort.key  = key
+    }
+    self.sort = sort
+    self.reloadDisplayUser()
 }
 
 </script>
