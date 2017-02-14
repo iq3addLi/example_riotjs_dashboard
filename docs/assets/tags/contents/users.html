@@ -255,16 +255,6 @@ self.doLogout = function(){
     })
 }
 
-self.doEditUser = function(event){
-    self.selectedUser = event.item
-
-    self.accountNameInput.value = event.item.accountName
-    self.displayNameInput.value = event.item.displayName
-    self.emailInput.value = event.item.email
-
-    self.showRegistWindow()
-}
-
 self.doRegistUser = function(event){
     var newValue = {
         accountName: self.accountNameInput.value,
@@ -291,10 +281,19 @@ self.doRegistUser = function(event){
     })
 }
 
+self.doEditUser = function(event){
+    var user = event.item.user
+    self.selectedUser = user
+
+    self.accountNameInput.value = user.accountName
+    self.displayNameInput.value = user.displayName
+    self.emailInput.value = user.email
+
+    self.showRegistWindow()
+}
+
 self.doRemoveUser = function(event){
-
-    self.selectedUser = event.item
-
+    var user = event.item.user
     sweetAlert({
          title  : "Information",
          text   : "Do you want delete user?",
@@ -302,9 +301,8 @@ self.doRemoveUser = function(event){
          showCancelButton: true,
          closeOnConfirm: false
     }, function(){
-        var index = self.allUsers.indexOf(self.selectedUser)
+        var index = self.allUsers.indexOf(user)
         self.allUsers.splice(index,1)
-        self.selectedUser = null
 
         sweetAlert({
             title  : "Information",
